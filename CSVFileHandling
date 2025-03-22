@@ -580,7 +580,7 @@ public class MotorPH8 {
         InputStream inputStream = classLoader.getResourceAsStream(EMPLOYEE_FILE);
 
         if (inputStream == null) {
-            System.out.println("❌ Error: " + EMPLOYEE_FILE + " not found in resources.");
+            System.out.println(" Error: " + EMPLOYEE_FILE + " not found in resources.");
             return 0;
         }
 
