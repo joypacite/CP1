@@ -1,0 +1,971 @@
+import java.text.ParseException;
+ import java.text.SimpleDateFormat;
+ import java.util.Date;
+ import java.util.Locale;
+ import java.util.Scanner;
+ /**
+  *
+  * @author Joy Pacite
+  */
+ public class MotorPH8hardcode {
+    
+     private static final SimpleDateFormat INPUT_DATE_FORMAT = new SimpleDateFormat("d-MMM-yy", Locale.ENGLISH);
+     private static final SimpleDateFormat MONTH_FORMAT = new SimpleDateFormat("MMM-yy", Locale.ENGLISH);
+     private static final SimpleDateFormat TIME_FORMAT = new SimpleDateFormat("HH:mm");
+     private static final String WORK_START = "08:00";
+     private static final String WORK_END = "17:00";
+     private static final int GRACE_PERIOD_MINUTES = 10;
+     private static final int BREAK_HOUR = 60;
+ 
+     //  employee data
+     private static final String[][] EMPLOYEES = {
+     {"Employee #", "Full Name", "Birthday", "Address", "Phone Number", "SSS #", "Philhealth #", "TIN #", "Pag-ibig #", "Status", "Position", "Immediate Supervisor", "Basic Salary", "Rice Subsidy", "Phone Allowance", "Clothing Allowance", "Gross Semi-monthly Rate", "Hourly Rate"},
+     {"10001", "Manuel III Garcia", "10/11/1983", "Valero Carpark Building Valero Street 1227 Makati City", "966-860-270", "44-4506057-3", "82-012685395-1", "442-605-657-000", "6912-9533-0870", "Regular", "Chief Executive Officer", "N/A", "90000", "1500", "2000", "1000", "45000", "535.71"},
+     {"10002", "Antonio Lim", "6/19/1988", "San Antonio De Padua 2 Block 1 Lot 8 and 2 Dasmarinas Cavite", "171-867-411", "52-2061274-9", "33-173564633-8", "683-102-776-000", "6639-0499-5411", "Regular", "Chief Operating Officer", "Garcia Manuel III", "60000", "1500", "2000", "1000", "30000", "357.14"},
+     {"10003", "Bianca Sofia Aquino", "8/4/1989", "Rm. 402 4/F Jiao Building Timog Avenue Cor. Quezon Avenue 1100 Quezon City", "966-889-370", "30-8870406-2", "17-745118966-5", "971-711-280-000", "1715-1977-3969", "Regular", "Chief Finance Officer", "Garcia Manuel III", "60000", "1500", "2000", "1000", "30000", "357.14"},
+     };
+ 
+ 
+    
+ 
+     //  attendance data
+     private static final String[][] ATTENDANCE = {        
+ {"10002","Antonio Lim","3-Jun-24","10:35","19:44"},
+ {"10002","Antonio Lim","4-Jun-24","10:11","20:16"},
+ {"10002","Antonio Lim","5-Jun-24","9:24","19:19"},
+ {"10002","Antonio Lim","6-Jun-24","10:47","20:43"},
+ {"10002","Antonio Lim","7-Jun-24","9:41","20:01"},
+ {"10002","Antonio Lim","10-Jun-24","8:02","18:40"},
+ {"10002","Antonio Lim","11-Jun-24","9:55","19:49"},
+ {"10002","Antonio Lim","12-Jun-24","9:04","18:20"},
+ {"10002","Antonio Lim","13-Jun-24","8:35","18:33"},
+ {"10002","Antonio Lim","14-Jun-24","8:22","17:34"},
+ {"10002","Antonio Lim","17-Jun-24","9:44","18:35"},
+ {"10002","Antonio Lim","18-Jun-24","9:55","17:35"},
+ {"10002","Antonio Lim","19-Jun-24","9:29","19:35"},
+ {"10002","Antonio Lim","20-Jun-24","9:17","19:59"},
+ {"10002","Antonio Lim","21-Jun-24","10:14","19:10"},
+ {"10002","Antonio Lim","24-Jun-24","9:08","16:12"},
+ {"10002","Antonio Lim","25-Jun-24","8:48","19:41"},
+ {"10002","Antonio Lim","26-Jun-24","9:49","18:47"},
+ {"10002","Antonio Lim","27-Jun-24","9:42","18:48"},
+ {"10002","Antonio Lim","28-Jun-24","8:13","18:42"},
+ {"10002","Antonio Lim","1-Jul-24","10:06","19:22"},
+ {"10002","Antonio Lim","2-Jul-24","10:38","18:29"},
+ {"10002","Antonio Lim","3-Jul-24","9:53","18:07"},
+ {"10002","Antonio Lim","4-Jul-24","10:19","17:46"},
+ {"10002","Antonio Lim","5-Jul-24","9:07","17:31"},
+ {"10002","Antonio Lim","8-Jul-24","9:53","18:32"},
+ {"10002","Antonio Lim","9-Jul-24","8:45","16:35"},
+ {"10002","Antonio Lim","10-Jul-24","9:25","18:52"},
+ {"10002","Antonio Lim","11-Jul-24","9:54","17:39"},
+ {"10002","Antonio Lim","12-Jul-24","10:36","20:54"},
+ {"10002","Antonio Lim","15-Jul-24","10:43","20:24"},
+ {"10002","Antonio Lim","16-Jul-24","10:54","17:56"},
+ {"10002","Antonio Lim","17-Jul-24","10:32","18:35"},
+ {"10002","Antonio Lim","18-Jul-24","8:15","15:25"},
+ {"10002","Antonio Lim","19-Jul-24","8:38","17:18"},
+ {"10002","Antonio Lim","22-Jul-24","10:28","17:50"},
+ {"10002","Antonio Lim","23-Jul-24","10:43","18:49"},
+ {"10002","Antonio Lim","24-Jul-24","8:15","16:09"},
+ {"10002","Antonio Lim","25-Jul-24","9:40","20:20"},
+ {"10002","Antonio Lim","26-Jul-24","9:34","17:50"},
+ {"10002","Antonio Lim","29-Jul-24","9:40","19:16"},
+ {"10002","Antonio Lim","30-Jul-24","10:52","19:07"},
+ {"10002","Antonio Lim","31-Jul-24","9:19","19:31"},
+ {"10002","Antonio Lim","1-Aug-24","10:54","20:14"},
+ {"10002","Antonio Lim","2-Aug-24","10:35","19:02"},
+ {"10002","Antonio Lim","5-Aug-24","9:16","18:34"},
+ {"10002","Antonio Lim","6-Aug-24","10:51","20:21"},
+ {"10002","Antonio Lim","7-Aug-24","8:22","15:36"},
+ {"10002","Antonio Lim","8-Aug-24","10:26","19:38"},
+ {"10002","Antonio Lim","9-Aug-24","9:04","18:42"},
+ {"10002","Antonio Lim","12-Aug-24","10:48","20:12"},
+ {"10002","Antonio Lim","13-Aug-24","9:13","19:35"},
+ {"10002","Antonio Lim","14-Aug-24","9:09","19:44"},
+ {"10002","Antonio Lim","15-Aug-24","10:21","18:18"},
+ {"10002","Antonio Lim","16-Aug-24","9:22","17:02"},
+ {"10002","Antonio Lim","19-Aug-24","8:38","18:52"},
+ {"10002","Antonio Lim","20-Aug-24","8:18","18:01"},
+ {"10002","Antonio Lim","21-Aug-24","9:12","18:13"},
+ {"10002","Antonio Lim","22-Aug-24","8:02","18:04"},
+ {"10002","Antonio Lim","23-Aug-24","9:08","17:28"},
+ {"10002","Antonio Lim","26-Aug-24","10:52","20:28"},
+ {"10002","Antonio Lim","27-Aug-24","10:40","18:28"},
+ {"10002","Antonio Lim","28-Aug-24","8:23","16:33"},
+ {"10002","Antonio Lim","29-Aug-24","8:54","18:01"},
+ {"10002","Antonio Lim","30-Aug-24","9:47","19:59"},
+ {"10002","Antonio Lim","2-Sep-24","10:36","18:54"},
+ {"10002","Antonio Lim","3-Sep-24","9:22","17:22"},
+ {"10002","Antonio Lim","4-Sep-24","10:55","20:44"},
+ {"10002","Antonio Lim","5-Sep-24","9:42","16:59"},
+ {"10002","Antonio Lim","6-Sep-24","9:16","18:35"},
+ {"10002","Antonio Lim","9-Sep-24","10:21","17:25"},
+ {"10002","Antonio Lim","10-Sep-24","8:39","19:33"},
+ {"10002","Antonio Lim","11-Sep-24","9:01","18:38"},
+ {"10002","Antonio Lim","12-Sep-24","10:55","21:53"},
+ {"10002","Antonio Lim","13-Sep-24","9:58","19:01"},
+ {"10002","Antonio Lim","16-Sep-24","9:02","17:24"},
+ {"10002","Antonio Lim","17-Sep-24","8:38","16:59"},
+ {"10002","Antonio Lim","18-Sep-24","9:57","17:32"},
+ {"10002","Antonio Lim","19-Sep-24","9:57","19:08"},
+ {"10002","Antonio Lim","20-Sep-24","10:02","20:55"},
+ {"10002","Antonio Lim","23-Sep-24","10:44","17:50"},
+ {"10002","Antonio Lim","24-Sep-24","9:55","20:08"},
+ {"10002","Antonio Lim","25-Sep-24","10:12","18:34"},
+ {"10002","Antonio Lim","26-Sep-24","10:16","19:30"},
+ {"10002","Antonio Lim","27-Sep-24","8:43","15:48"},
+ {"10002","Antonio Lim","30-Sep-24","9:32","16:33"},
+ {"10002","Antonio Lim","1-Oct-24","9:12","19:22"},
+ {"10002","Antonio Lim","2-Oct-24","8:43","18:37"},
+ {"10002","Antonio Lim","3-Oct-24","10:57","21:55"},
+ {"10002","Antonio Lim","4-Oct-24","8:17","17:17"},
+ {"10002","Antonio Lim","7-Oct-24","9:00","19:22"},
+ {"10002","Antonio Lim","8-Oct-24","9:44","19:15"},
+ {"10002","Antonio Lim","9-Oct-24","8:52","19:36"},
+ {"10002","Antonio Lim","10-Oct-24","8:59","18:32"},
+ {"10002","Antonio Lim","11-Oct-24","9:38","18:02"},
+ {"10002","Antonio Lim","14-Oct-24","10:41","19:44"},
+ {"10002","Antonio Lim","15-Oct-24","10:21","18:12"},
+ {"10002","Antonio Lim","16-Oct-24","8:42","19:16"},
+ {"10002","Antonio Lim","17-Oct-24","8:15","17:22"},
+ {"10002","Antonio Lim","18-Oct-24","10:16","18:39"},
+ {"10002","Antonio Lim","21-Oct-24","8:20","16:34"},
+ {"10002","Antonio Lim","22-Oct-24","8:44","15:57"},
+ {"10002","Antonio Lim","23-Oct-24","10:07","18:36"},
+ {"10002","Antonio Lim","24-Oct-24","9:33","19:08"},
+ {"10002","Antonio Lim","25-Oct-24","10:21","19:04"},
+ {"10002","Antonio Lim","28-Oct-24","9:19","16:25"},
+ {"10002","Antonio Lim","29-Oct-24","8:11","18:57"},
+ {"10002","Antonio Lim","30-Oct-24","9:45","19:00"},
+ {"10002","Antonio Lim","31-Oct-24","9:44","17:20"},
+ {"10002","Antonio Lim","1-Nov-24","10:00","20:39"},
+ {"10002","Antonio Lim","4-Nov-24","9:50","19:34"},
+ {"10002","Antonio Lim","5-Nov-24","8:32","18:29"},
+ {"10002","Antonio Lim","6-Nov-24","9:50","17:52"},
+ {"10002","Antonio Lim","7-Nov-24","8:34","19:13"},
+ {"10002","Antonio Lim","8-Nov-24","10:26","19:25"},
+ {"10002","Antonio Lim","11-Nov-24","10:45","19:52"},
+ {"10002","Antonio Lim","12-Nov-24","8:26","18:36"},
+ {"10002","Antonio Lim","13-Nov-24","10:44","18:18"},
+ {"10002","Antonio Lim","14-Nov-24","8:34","17:11"},
+ {"10002","Antonio Lim","15-Nov-24","10:36","19:08"},
+ {"10002","Antonio Lim","18-Nov-24","8:03","18:32"},
+ {"10002","Antonio Lim","19-Nov-24","8:27","15:30"},
+ {"10002","Antonio Lim","20-Nov-24","8:08","16:36"},
+ {"10002","Antonio Lim","21-Nov-24","8:59","19:30"},
+ {"10002","Antonio Lim","22-Nov-24","8:41","18:42"},
+ {"10002","Antonio Lim","25-Nov-24","10:01","18:27"},
+ {"10002","Antonio Lim","26-Nov-24","8:42","16:43"},
+ {"10002","Antonio Lim","27-Nov-24","10:44","21:24"},
+ {"10002","Antonio Lim","28-Nov-24","10:32","19:55"},
+ {"10002","Antonio Lim","29-Nov-24","8:56","18:05"},
+ {"10002","Antonio Lim","2-Dec-24","9:57","16:57"},
+ {"10002","Antonio Lim","3-Dec-24","9:32","17:09"},
+ {"10002","Antonio Lim","4-Dec-24","10:29","18:41"},
+ {"10002","Antonio Lim","5-Dec-24","9:23","17:17"},
+ {"10002","Antonio Lim","6-Dec-24","9:32","18:33"},
+ {"10002","Antonio Lim","9-Dec-24","8:28","18:13"},
+ {"10002","Antonio Lim","10-Dec-24","10:31","20:49"},
+ {"10002","Antonio Lim","11-Dec-24","10:38","18:50"},
+ {"10002","Antonio Lim","12-Dec-24","10:53","18:03"},
+ {"10002","Antonio Lim","13-Dec-24","8:50","18:17"},
+ {"10002","Antonio Lim","16-Dec-24","10:15","17:32"},
+ {"10002","Antonio Lim","17-Dec-24","10:49","21:27"},
+ {"10002","Antonio Lim","18-Dec-24","10:50","18:35"},
+ {"10002","Antonio Lim","19-Dec-24","8:31","19:04"},
+ {"10002","Antonio Lim","20-Dec-24","9:45","18:19"},
+ {"10002","Antonio Lim","23-Dec-24","8:20","19:02"},
+ {"10002","Antonio Lim","24-Dec-24","10:52","18:12"},
+ {"10002","Antonio Lim","25-Dec-24","10:58","21:30"},
+ {"10002","Antonio Lim","26-Dec-24","9:43","18:16"},
+ {"10002","Antonio Lim","27-Dec-24","8:47","15:58"},
+ {"10002","Antonio Lim","30-Dec-24","9:01","16:37"},
+ {"10002","Antonio Lim","31-Dec-24","8:37","15:39"},
+ {"10001","Manuel III Garcia","3-Jun-24","8:59","18:31"},
+ {"10001","Manuel III Garcia","4-Jun-24","9:47","19:07"},
+ {"10001","Manuel III Garcia","5-Jun-24","10:57","21:32"},
+ {"10001","Manuel III Garcia","6-Jun-24","9:32","19:15"},
+ {"10001","Manuel III Garcia","7-Jun-24","9:46","19:15"},
+ {"10001","Manuel III Garcia","10-Jun-24","9:10","18:36"},
+ {"10001","Manuel III Garcia","11-Jun-24","10:30","20:53"},
+ {"10001","Manuel III Garcia","12-Jun-24","8:37","18:25"},
+ {"10001","Manuel III Garcia","13-Jun-24","8:24","19:20"},
+ {"10001","Manuel III Garcia","14-Jun-24","9:28","19:24"},
+ {"10001","Manuel III Garcia","17-Jun-24","9:07","19:10"},
+ {"10001","Manuel III Garcia","18-Jun-24","8:32","18:35"},
+ {"10001","Manuel III Garcia","19-Jun-24","9:05","18:30"},
+ {"10001","Manuel III Garcia","20-Jun-24","9:07","20:01"},
+ {"10001","Manuel III Garcia","21-Jun-24","8:19","15:24"},
+ {"10001","Manuel III Garcia","24-Jun-24","10:26","19:43"},
+ {"10001","Manuel III Garcia","25-Jun-24","9:52","17:12"},
+ {"10001","Manuel III Garcia","26-Jun-24","8:23","18:51"},
+ {"10001","Manuel III Garcia","27-Jun-24","8:46","16:09"},
+ {"10001","Manuel III Garcia","28-Jun-24","9:07","18:28"},
+ {"10001","Manuel III Garcia","1-Jul-24","9:15","19:17"},
+ {"10001","Manuel III Garcia","2-Jul-24","9:33","19:06"},
+ {"10001","Manuel III Garcia","3-Jul-24","10:43","19:29"},
+ {"10001","Manuel III Garcia","4-Jul-24","8:15","18:26"},
+ {"10001","Manuel III Garcia","5-Jul-24","8:00","16:29"},
+ {"10001","Manuel III Garcia","8-Jul-24","8:32","16:59"},
+ {"10001","Manuel III Garcia","9-Jul-24","9:46","18:46"},
+ {"10001","Manuel III Garcia","10-Jul-24","9:02","17:37"},
+ {"10001","Manuel III Garcia","11-Jul-24","10:57","21:16"},
+ {"10001","Manuel III Garcia","12-Jul-24","8:48","17:32"},
+ {"10001","Manuel III Garcia","15-Jul-24","10:02","20:52"},
+ {"10001","Manuel III Garcia","16-Jul-24","9:52","19:24"},
+ {"10001","Manuel III Garcia","17-Jul-24","10:37","19:25"},
+ {"10001","Manuel III Garcia","18-Jul-24","10:10","18:44"},
+ {"10001","Manuel III Garcia","19-Jul-24","10:41","18:38"},
+ {"10001","Manuel III Garcia","22-Jul-24","8:28","18:15"},
+ {"10001","Manuel III Garcia","23-Jul-24","10:54","20:03"},
+ {"10001","Manuel III Garcia","24-Jul-24","8:46","17:42"},
+ {"10001","Manuel III Garcia","25-Jul-24","10:25","21:00"},
+ {"10001","Manuel III Garcia","26-Jul-24","10:52","18:25"},
+ {"10001","Manuel III Garcia","29-Jul-24","8:11","18:48"},
+ {"10001","Manuel III Garcia","30-Jul-24","8:04","17:00"},
+ {"10001","Manuel III Garcia","31-Jul-24","9:52","18:05"},
+ {"10001","Manuel III Garcia","1-Aug-24","10:08","18:21"},
+ {"10001","Manuel III Garcia","2-Aug-24","10:30","20:48"},
+ {"10001","Manuel III Garcia","5-Aug-24","8:01","18:19"},
+ {"10001","Manuel III Garcia","6-Aug-24","10:01","17:37"},
+ {"10001","Manuel III Garcia","7-Aug-24","9:21","17:17"},
+ {"10001","Manuel III Garcia","8-Aug-24","9:15","16:54"},
+ {"10001","Manuel III Garcia","9-Aug-24","9:35","17:16"},
+ {"10001","Manuel III Garcia","12-Aug-24","9:56","18:02"},
+ {"10001","Manuel III Garcia","13-Aug-24","8:34","19:00"},
+ {"10001","Manuel III Garcia","14-Aug-24","9:59","19:51"},
+ {"10001","Manuel III Garcia","15-Aug-24","9:41","17:24"},
+ {"10001","Manuel III Garcia","16-Aug-24","9:46","19:13"},
+ {"10001","Manuel III Garcia","19-Aug-24","10:46","18:08"},
+ {"10001","Manuel III Garcia","20-Aug-24","8:15","16:12"},
+ {"10001","Manuel III Garcia","21-Aug-24","8:56","16:56"},
+ {"10001","Manuel III Garcia","22-Aug-24","9:33","19:48"},
+ {"10001","Manuel III Garcia","23-Aug-24","8:25","16:27"},
+ {"10001","Manuel III Garcia","26-Aug-24","10:12","20:48"},
+ {"10001","Manuel III Garcia","27-Aug-24","9:08","19:12"},
+ {"10001","Manuel III Garcia","28-Aug-24","10:20","18:35"},
+ {"10001","Manuel III Garcia","29-Aug-24","8:07","18:00"},
+ {"10001","Manuel III Garcia","30-Aug-24","8:45","18:35"},
+ {"10001","Manuel III Garcia","2-Sep-24","10:31","20:13"},
+ {"10001","Manuel III Garcia","3-Sep-24","10:49","19:10"},
+ {"10001","Manuel III Garcia","4-Sep-24","9:53","18:13"},
+ {"10001","Manuel III Garcia","5-Sep-24","8:07","17:24"},
+ {"10001","Manuel III Garcia","6-Sep-24","8:04","18:25"},
+ {"10001","Manuel III Garcia","9-Sep-24","10:33","17:50"},
+ {"10001","Manuel III Garcia","10-Sep-24","10:51","20:42"},
+ {"10001","Manuel III Garcia","11-Sep-24","9:40","18:52"},
+ {"10001","Manuel III Garcia","12-Sep-24","9:56","17:02"},
+ {"10001","Manuel III Garcia","13-Sep-24","8:25","17:20"},
+ {"10001","Manuel III Garcia","16-Sep-24","8:25","17:02"},
+ {"10001","Manuel III Garcia","17-Sep-24","8:17","16:22"},
+ {"10001","Manuel III Garcia","18-Sep-24","8:22","15:29"},
+ {"10001","Manuel III Garcia","19-Sep-24","10:32","21:12"},
+ {"10001","Manuel III Garcia","20-Sep-24","8:38","19:05"},
+ {"10001","Manuel III Garcia","23-Sep-24","10:51","18:04"},
+ {"10001","Manuel III Garcia","24-Sep-24","8:39","17:13"},
+ {"10001","Manuel III Garcia","25-Sep-24","9:35","17:55"},
+ {"10001","Manuel III Garcia","26-Sep-24","9:55","19:04"},
+ {"10001","Manuel III Garcia","27-Sep-24","8:00","16:58"},
+ {"10001","Manuel III Garcia","30-Sep-24","8:33","17:21"},
+ {"10001","Manuel III Garcia","1-Oct-24","10:06","19:27"},
+ {"10001","Manuel III Garcia","2-Oct-24","8:14","18:13"},
+ {"10001","Manuel III Garcia","3-Oct-24","8:02","15:11"},
+ {"10001","Manuel III Garcia","4-Oct-24","8:29","17:37"},
+ {"10001","Manuel III Garcia","7-Oct-24","10:18","20:25"},
+ {"10001","Manuel III Garcia","8-Oct-24","9:12","19:45"},
+ {"10001","Manuel III Garcia","9-Oct-24","8:04","16:46"},
+ {"10001","Manuel III Garcia","10-Oct-24","10:44","19:06"},
+ {"10001","Manuel III Garcia","11-Oct-24","8:57","16:34"},
+ {"10001","Manuel III Garcia","14-Oct-24","10:20","20:42"},
+ {"10001","Manuel III Garcia","15-Oct-24","10:46","20:28"},
+ {"10001","Manuel III Garcia","16-Oct-24","10:27","19:52"},
+ {"10001","Manuel III Garcia","17-Oct-24","9:10","19:19"},
+ {"10001","Manuel III Garcia","18-Oct-24","8:20","18:57"},
+ {"10001","Manuel III Garcia","21-Oct-24","10:07","17:55"},
+ {"10001","Manuel III Garcia","22-Oct-24","8:52","16:51"},
+ {"10001","Manuel III Garcia","23-Oct-24","10:20","18:13"},
+ {"10001","Manuel III Garcia","24-Oct-24","10:23","19:25"},
+ {"10001","Manuel III Garcia","25-Oct-24","10:06","19:22"},
+ {"10001","Manuel III Garcia","28-Oct-24","9:56","20:49"},
+ {"10001","Manuel III Garcia","29-Oct-24","8:51","17:49"},
+ {"10001","Manuel III Garcia","30-Oct-24","10:40","18:54"},
+ {"10001","Manuel III Garcia","31-Oct-24","8:27","17:48"},
+ {"10001","Manuel III Garcia","1-Nov-24","9:34","18:30"},
+ {"10001","Manuel III Garcia","4-Nov-24","8:47","16:13"},
+ {"10001","Manuel III Garcia","5-Nov-24","10:41","20:15"},
+ {"10001","Manuel III Garcia","6-Nov-24","10:59","21:20"},
+ {"10001","Manuel III Garcia","7-Nov-24","8:36","18:33"},
+ {"10001","Manuel III Garcia","8-Nov-24","9:11","16:49"},
+ {"10001","Manuel III Garcia","11-Nov-24","10:00","17:54"},
+ {"10001","Manuel III Garcia","12-Nov-24","10:01","19:00"},
+ {"10001","Manuel III Garcia","13-Nov-24","10:15","17:54"},
+ {"10001","Manuel III Garcia","14-Nov-24","9:26","16:43"},
+ {"10001","Manuel III Garcia","15-Nov-24","9:52","17:47"},
+ {"10001","Manuel III Garcia","18-Nov-24","10:50","19:45"},
+ {"10001","Manuel III Garcia","19-Nov-24","9:37","17:07"},
+ {"10001","Manuel III Garcia","20-Nov-24","8:12","16:45"},
+ {"10001","Manuel III Garcia","21-Nov-24","9:58","19:16"},
+ {"10001","Manuel III Garcia","22-Nov-24","10:00","19:07"},
+ {"10001","Manuel III Garcia","25-Nov-24","9:28","19:51"},
+ {"10001","Manuel III Garcia","26-Nov-24","8:25","19:21"},
+ {"10001","Manuel III Garcia","27-Nov-24","9:57","20:19"},
+ {"10001","Manuel III Garcia","28-Nov-24","10:18","20:09"},
+ {"10001","Manuel III Garcia","29-Nov-24","10:35","21:12"},
+ {"10001","Manuel III Garcia","2-Dec-24","8:45","16:43"},
+ {"10001","Manuel III Garcia","3-Dec-24","8:07","18:51"},
+ {"10001","Manuel III Garcia","4-Dec-24","10:49","18:57"},
+ {"10001","Manuel III Garcia","5-Dec-24","9:12","16:52"},
+ {"10001","Manuel III Garcia","6-Dec-24","10:37","20:43"},
+ {"10001","Manuel III Garcia","9-Dec-24","8:40","18:16"},
+ {"10001","Manuel III Garcia","10-Dec-24","9:36","16:39"},
+ {"10001","Manuel III Garcia","11-Dec-24","10:12","17:24"},
+ {"10001","Manuel III Garcia","12-Dec-24","9:07","19:44"},
+ {"10001","Manuel III Garcia","13-Dec-24","10:33","19:51"},
+ {"10001","Manuel III Garcia","16-Dec-24","9:47","18:58"},
+ {"10001","Manuel III Garcia","17-Dec-24","8:15","16:11"},
+ {"10001","Manuel III Garcia","18-Dec-24","8:03","18:35"},
+ {"10001","Manuel III Garcia","19-Dec-24","8:12","15:22"},
+ {"10001","Manuel III Garcia","20-Dec-24","9:29","20:10"},
+ {"10001","Manuel III Garcia","23-Dec-24","9:42","18:39"},
+ {"10001","Manuel III Garcia","24-Dec-24","8:03","15:54"},
+ {"10001","Manuel III Garcia","25-Dec-24","9:52","20:38"},
+ {"10001","Manuel III Garcia","26-Dec-24","8:29","18:52"},
+ {"10001","Manuel III Garcia","27-Dec-24","10:14","19:00"},
+ {"10001","Manuel III Garcia","30-Dec-24","9:29","18:21"},
+ {"10001","Manuel III Garcia","31-Dec-24","9:27","18:30"},
+ {"10003","Bianca Sofia Aquino","3-Jun-24","10:23","18:32"},
+ {"10003","Bianca Sofia Aquino","4-Jun-24","10:45","20:37"},
+ {"10003","Bianca Sofia Aquino","5-Jun-24","9:18","18:46"},
+ {"10003","Bianca Sofia Aquino","6-Jun-24","10:10","18:01"},
+ {"10003","Bianca Sofia Aquino","7-Jun-24","10:22","20:15"},
+ {"10003","Bianca Sofia Aquino","10-Jun-24","8:58","17:52"},
+ {"10003","Bianca Sofia Aquino","11-Jun-24","9:35","17:06"},
+ {"10003","Bianca Sofia Aquino","12-Jun-24","10:51","20:14"},
+ {"10003","Bianca Sofia Aquino","13-Jun-24","8:53","19:06"},
+ {"10003","Bianca Sofia Aquino","14-Jun-24","10:20","18:16"},
+ {"10003","Bianca Sofia Aquino","17-Jun-24","10:46","20:54"},
+ {"10003","Bianca Sofia Aquino","18-Jun-24","8:38","18:30"},
+ {"10003","Bianca Sofia Aquino","19-Jun-24","10:53","19:46"},
+ {"10003","Bianca Sofia Aquino","20-Jun-24","10:02","18:12"},
+ {"10003","Bianca Sofia Aquino","21-Jun-24","9:03","18:01"},
+ {"10003","Bianca Sofia Aquino","24-Jun-24","9:11","16:25"},
+ {"10003","Bianca Sofia Aquino","25-Jun-24","10:59","19:33"},
+ {"10003","Bianca Sofia Aquino","26-Jun-24","9:39","17:15"},
+ {"10003","Bianca Sofia Aquino","27-Jun-24","10:41","18:27"},
+ {"10003","Bianca Sofia Aquino","28-Jun-24","9:43","19:09"},
+ {"10003","Bianca Sofia Aquino","1-Jul-24","9:03","20:00"},
+ {"10003","Bianca Sofia Aquino","2-Jul-24","9:06","18:09"},
+ {"10003","Bianca Sofia Aquino","3-Jul-24","8:34","16:27"},
+ {"10003","Bianca Sofia Aquino","4-Jul-24","8:17","16:54"},
+ {"10003","Bianca Sofia Aquino","5-Jul-24","10:18","18:10"},
+ {"10003","Bianca Sofia Aquino","8-Jul-24","10:28","21:25"},
+ {"10003","Bianca Sofia Aquino","9-Jul-24","9:14","20:12"},
+ {"10003","Bianca Sofia Aquino","10-Jul-24","8:51","17:54"},
+ {"10003","Bianca Sofia Aquino","11-Jul-24","8:54","17:41"},
+ {"10003","Bianca Sofia Aquino","12-Jul-24","8:40","18:05"},
+ {"10003","Bianca Sofia Aquino","15-Jul-24","9:47","20:24"},
+ {"10003","Bianca Sofia Aquino","16-Jul-24","9:17","17:16"},
+ {"10003","Bianca Sofia Aquino","17-Jul-24","8:38","15:44"},
+ {"10003","Bianca Sofia Aquino","18-Jul-24","10:16","18:03"},
+ {"10003","Bianca Sofia Aquino","19-Jul-24","8:04","15:32"},
+ {"10003","Bianca Sofia Aquino","22-Jul-24","9:49","18:06"},
+ {"10003","Bianca Sofia Aquino","23-Jul-24","9:37","19:35"},
+ {"10003","Bianca Sofia Aquino","24-Jul-24","8:59","18:23"},
+ {"10003","Bianca Sofia Aquino","25-Jul-24","9:44","19:49"},
+ {"10003","Bianca Sofia Aquino","26-Jul-24","10:50","20:39"},
+ {"10003","Bianca Sofia Aquino","29-Jul-24","9:38","19:46"},
+ {"10003","Bianca Sofia Aquino","30-Jul-24","9:32","18:13"},
+ {"10003","Bianca Sofia Aquino","31-Jul-24","8:39","18:59"},
+ {"10003","Bianca Sofia Aquino","1-Aug-24","9:32","19:37"},
+ {"10003","Bianca Sofia Aquino","2-Aug-24","10:51","21:25"},
+ {"10003","Bianca Sofia Aquino","5-Aug-24","9:32","18:25"},
+ {"10003","Bianca Sofia Aquino","6-Aug-24","10:30","19:38"},
+ {"10003","Bianca Sofia Aquino","7-Aug-24","10:53","18:42"},
+ {"10003","Bianca Sofia Aquino","8-Aug-24","10:44","20:30"},
+ {"10003","Bianca Sofia Aquino","9-Aug-24","8:06","17:40"},
+ {"10003","Bianca Sofia Aquino","12-Aug-24","9:59","18:18"},
+ {"10003","Bianca Sofia Aquino","13-Aug-24","10:33","17:44"},
+ {"10003","Bianca Sofia Aquino","14-Aug-24","8:29","17:22"},
+ {"10003","Bianca Sofia Aquino","15-Aug-24","8:24","16:39"},
+ {"10003","Bianca Sofia Aquino","16-Aug-24","8:32","18:03"},
+ {"10003","Bianca Sofia Aquino","19-Aug-24","9:47","20:02"},
+ {"10003","Bianca Sofia Aquino","20-Aug-24","9:10","17:30"},
+ {"10003","Bianca Sofia Aquino","21-Aug-24","8:19","17:16"},
+ {"10003","Bianca Sofia Aquino","22-Aug-24","9:28","16:46"},
+ {"10003","Bianca Sofia Aquino","23-Aug-24","9:27","18:50"},
+ {"10003","Bianca Sofia Aquino","26-Aug-24","8:53","18:58"},
+ {"10003","Bianca Sofia Aquino","27-Aug-24","8:34","15:49"},
+ {"10003","Bianca Sofia Aquino","28-Aug-24","9:50","19:36"},
+ {"10003","Bianca Sofia Aquino","29-Aug-24","9:01","19:34"},
+ {"10003","Bianca Sofia Aquino","30-Aug-24","9:51","19:41"},
+ {"10003","Bianca Sofia Aquino","2-Sep-24","8:20","15:28"},
+ {"10003","Bianca Sofia Aquino","3-Sep-24","10:48","21:27"},
+ {"10003","Bianca Sofia Aquino","4-Sep-24","10:50","19:39"},
+ {"10003","Bianca Sofia Aquino","5-Sep-24","8:01","15:24"},
+ {"10003","Bianca Sofia Aquino","6-Sep-24","10:53","20:20"},
+ {"10003","Bianca Sofia Aquino","9-Sep-24","8:14","19:04"},
+ {"10003","Bianca Sofia Aquino","10-Sep-24","10:15","17:55"},
+ {"10003","Bianca Sofia Aquino","11-Sep-24","9:57","17:42"},
+ {"10003","Bianca Sofia Aquino","12-Sep-24","9:58","19:07"},
+ {"10003","Bianca Sofia Aquino","13-Sep-24","9:21","19:39"},
+ {"10003","Bianca Sofia Aquino","16-Sep-24","9:28","17:05"},
+ {"10003","Bianca Sofia Aquino","17-Sep-24","9:50","19:10"},
+ {"10003","Bianca Sofia Aquino","18-Sep-24","10:56","20:58"},
+ {"10003","Bianca Sofia Aquino","19-Sep-24","8:24","15:50"},
+ {"10003","Bianca Sofia Aquino","20-Sep-24","8:06","17:22"},
+ {"10003","Bianca Sofia Aquino","23-Sep-24","9:58","18:04"},
+ {"10003","Bianca Sofia Aquino","24-Sep-24","8:44","16:30"},
+ {"10003","Bianca Sofia Aquino","25-Sep-24","10:30","17:48"},
+ {"10003","Bianca Sofia Aquino","26-Sep-24","9:37","20:25"},
+ {"10003","Bianca Sofia Aquino","27-Sep-24","9:29","17:52"},
+ {"10003","Bianca Sofia Aquino","30-Sep-24","9:30","17:23"},
+ {"10003","Bianca Sofia Aquino","1-Oct-24","10:46","19:59"},
+ {"10003","Bianca Sofia Aquino","2-Oct-24","8:48","16:20"},
+ {"10003","Bianca Sofia Aquino","3-Oct-24","9:38","20:30"},
+ {"10003","Bianca Sofia Aquino","4-Oct-24","9:10","19:07"},
+ {"10003","Bianca Sofia Aquino","7-Oct-24","9:08","17:15"},
+ {"10003","Bianca Sofia Aquino","8-Oct-24","9:03","18:27"},
+ {"10003","Bianca Sofia Aquino","9-Oct-24","8:27","16:34"},
+ {"10003","Bianca Sofia Aquino","10-Oct-24","10:37","20:50"},
+ {"10003","Bianca Sofia Aquino","11-Oct-24","10:55","20:30"},
+ {"10003","Bianca Sofia Aquino","14-Oct-24","9:00","17:36"},
+ {"10003","Bianca Sofia Aquino","15-Oct-24","8:46","17:53"},
+ {"10003","Bianca Sofia Aquino","16-Oct-24","10:37","21:22"},
+ {"10003","Bianca Sofia Aquino","17-Oct-24","8:39","16:36"},
+ {"10003","Bianca Sofia Aquino","18-Oct-24","10:38","20:22"},
+ {"10003","Bianca Sofia Aquino","21-Oct-24","10:26","19:33"},
+ {"10003","Bianca Sofia Aquino","22-Oct-24","9:09","17:15"},
+ {"10003","Bianca Sofia Aquino","23-Oct-24","8:23","17:36"},
+ {"10003","Bianca Sofia Aquino","24-Oct-24","8:13","18:04"},
+ {"10003","Bianca Sofia Aquino","25-Oct-24","9:08","18:43"},
+ {"10003","Bianca Sofia Aquino","28-Oct-24","10:39","19:31"},
+ {"10003","Bianca Sofia Aquino","29-Oct-24","10:28","18:09"},
+ {"10003","Bianca Sofia Aquino","30-Oct-24","9:16","16:21"},
+ {"10003","Bianca Sofia Aquino","31-Oct-24","10:38","18:36"},
+ {"10003","Bianca Sofia Aquino","1-Nov-24","9:28","19:17"},
+ {"10003","Bianca Sofia Aquino","4-Nov-24","8:36","16:12"},
+ {"10003","Bianca Sofia Aquino","5-Nov-24","10:53","20:32"},
+ {"10003","Bianca Sofia Aquino","6-Nov-24","10:40","20:34"},
+ {"10003","Bianca Sofia Aquino","7-Nov-24","10:54","21:20"},
+ {"10003","Bianca Sofia Aquino","8-Nov-24","9:42","19:48"},
+ {"10003","Bianca Sofia Aquino","11-Nov-24","10:20","20:57"},
+ {"10003","Bianca Sofia Aquino","12-Nov-24","10:36","20:45"},
+ {"10003","Bianca Sofia Aquino","13-Nov-24","8:18","16:16"},
+ {"10003","Bianca Sofia Aquino","14-Nov-24","10:01","19:30"},
+ {"10003","Bianca Sofia Aquino","15-Nov-24","8:41","17:50"},
+ {"10003","Bianca Sofia Aquino","18-Nov-24","10:04","20:21"},
+ {"10003","Bianca Sofia Aquino","19-Nov-24","9:38","20:33"},
+ {"10003","Bianca Sofia Aquino","20-Nov-24","10:01","17:37"},
+ {"10003","Bianca Sofia Aquino","21-Nov-24","8:12","18:06"},
+ {"10003","Bianca Sofia Aquino","22-Nov-24","8:42","18:43"},
+ {"10003","Bianca Sofia Aquino","25-Nov-24","9:40","20:33"},
+ {"10003","Bianca Sofia Aquino","26-Nov-24","8:03","15:52"},
+ {"10003","Bianca Sofia Aquino","27-Nov-24","10:51","21:07"},
+ {"10003","Bianca Sofia Aquino","28-Nov-24","10:38","18:45"},
+ {"10003","Bianca Sofia Aquino","29-Nov-24","8:28","16:11"},
+ {"10003","Bianca Sofia Aquino","2-Dec-24","8:43","17:37"},
+ {"10003","Bianca Sofia Aquino","3-Dec-24","10:06","18:24"},
+ {"10003","Bianca Sofia Aquino","4-Dec-24","9:26","19:12"},
+ {"10003","Bianca Sofia Aquino","5-Dec-24","8:13","17:28"},
+ {"10003","Bianca Sofia Aquino","6-Dec-24","8:18","16:12"},
+ {"10003","Bianca Sofia Aquino","9-Dec-24","9:22","17:44"},
+ {"10003","Bianca Sofia Aquino","10-Dec-24","8:31","15:36"},
+ {"10003","Bianca Sofia Aquino","11-Dec-24","8:20","17:15"},
+ {"10003","Bianca Sofia Aquino","12-Dec-24","9:00","18:31"},
+ {"10003","Bianca Sofia Aquino","13-Dec-24","8:14","16:36"},
+ {"10003","Bianca Sofia Aquino","16-Dec-24","10:18","18:01"},
+ {"10003","Bianca Sofia Aquino","17-Dec-24","8:15","17:27"},
+ {"10003","Bianca Sofia Aquino","18-Dec-24","9:44","18:32"},
+ {"10003","Bianca Sofia Aquino","19-Dec-24","10:26","19:03"},
+ {"10003","Bianca Sofia Aquino","20-Dec-24","9:03","18:51"},
+ {"10003","Bianca Sofia Aquino","23-Dec-24","9:14","17:28"},
+ {"10003","Bianca Sofia Aquino","24-Dec-24","9:00","16:37"},
+ {"10003","Bianca Sofia Aquino","25-Dec-24","9:28","18:02"},
+ {"10003","Bianca Sofia Aquino","26-Dec-24","8:35","18:45"},
+ {"10003","Bianca Sofia Aquino","27-Dec-24","10:30","17:43"},
+ {"10003","Bianca Sofia Aquino","30-Dec-24","10:46","21:43"},
+ {"10003","Bianca Sofia Aquino","31-Dec-24","8:53","16:37"}
+     };
+ 
+     public static void main(String[] args) {
+         Scanner scanner = new Scanner(System.in);
+ 
+         String inputID;
+         String inputName;
+         boolean employeeFound;
+         int attempts = 0;
+ 
+         do {
+             System.out.print("Enter Employee ID: ");
+             inputID = scanner.nextLine().trim();
+ 
+             System.out.print("Enter Employee Name: ");
+             inputName = scanner.nextLine().trim();
+ 
+             employeeFound = searchEmployee(inputID, inputName);
+             if (!employeeFound) {
+                 System.out.println("Error: Employee ID and Name do not match or do not exist. Please try again.");
+                 System.out.println("-----------------------------");
+                 attempts++;
+                 if (attempts >= 3) {
+                     System.out.println("Error: Too many invalid attempts. Exiting program.");
+                     System.out.println("-----------------------------");
+                     scanner.close();
+                     return;
+                 }
+             } else {
+                 break;
+             }
+         } while (true);
+ 
+         displayEmployeeDetails(inputID, inputName);
+ 
+         String inputMonth;
+         do {
+             System.out.print("Enter Month (MMM-yy) to view attendance or 'exit' to quit: ");
+             inputMonth = scanner.nextLine().trim();
+ 
+             if (inputMonth.equalsIgnoreCase("exit")) {
+                 break;
+             }
+ 
+             try {
+                 displayAttendance(inputID, inputName, inputMonth);
+                 calculateDeduction(inputID, inputName, inputMonth);
+             } catch (ParseException e) {
+                 System.out.println("Error: A parsing error occurred: " + e.getMessage());
+             }
+         } while (true);
+ 
+         scanner.close();
+     }
+ 
+     private static boolean searchEmployee(String inputID, String inputName) {
+         return findEmployee(inputID, inputName, false);
+     }
+ 
+     private static void displayEmployeeDetails(String inputID, String inputName) {
+         findEmployee(inputID, inputName, true);
+     }
+ 
+     private static boolean findEmployee(String inputID, String inputName, boolean displayDetails) {
+         for (String[] employee : EMPLOYEES) {
+             if (employee[0].trim().equals(inputID) && employee[1].trim().equalsIgnoreCase(inputName)) {
+                 if (displayDetails) {
+                     System.out.println("-----------------------------");
+                     System.out.println("Employee Details:");
+                     for (int i = 0; i < employee.length; i++) {
+                         System.out.printf("%s: %s%n", getEmployeeDetailLabel(i), employee[i].trim());
+                     }
+                     System.out.println("-----------------------------");
+                 }
+                 return true;
+             }
+         }
+         return false;
+     }
+ 
+     private static void displayAttendance(String inputID, String inputName, String inputMonth) throws ParseException {
+         System.out.println("Attendance Records for the Employee:");
+         System.out.println("----------------------------------------------------------------------------");
+         System.out.printf("%-12s %-10s %-10s %-10s %-10s %-15s%n", "Date", "Login", "Logout", "Late", "OT", "Worked Time");
+         System.out.println("----------------------------------------------------------------------------");
+ 
+         boolean recordFound = false;
+         for (String[] attendance : ATTENDANCE) {
+             if (attendance[0].trim().equals(inputID) && attendance[1].trim().equalsIgnoreCase(inputName)) {
+                 String date = attendance[2].trim();
+                 String login = attendance[3].trim();
+                 String logout = attendance[4].trim();
+ 
+                 String recordMonth = MONTH_FORMAT.format(INPUT_DATE_FORMAT.parse(date));
+                 if (inputMonth.equalsIgnoreCase("all") || inputMonth.equalsIgnoreCase(recordMonth)) {
+                     int lateMinutes = calculateLateMinutes(login);
+                     int overtimeMinutes = calculateOvertimeMinutes(logout);
+                     int workedMinutes = calculateWorkedMinutes(login, logout);
+ 
+                     System.out.printf("%-12s %-10s %-10s %-10s %-10s %-15s%n", date, login, logout,
+                             formatMinutesToHoursAndMinutes(lateMinutes),
+                             formatMinutesToHoursAndMinutes(overtimeMinutes),
+                             formatMinutesToHoursAndMinutes(workedMinutes));
+                     recordFound = true;
+                 }
+             }
+         }
+         if (!recordFound && !inputMonth.equalsIgnoreCase("all")) {
+             System.out.println("No attendance records found for the specified month.");
+             System.out.println("=============================");
+         }
+     }
+ 
+     private static int calculateLateMinutes(String login) throws ParseException {
+         Date loginTime = TIME_FORMAT.parse(login);
+         Date expectedStart = TIME_FORMAT.parse(WORK_START);
+         long diff = loginTime.getTime() - expectedStart.getTime();
+         int lateMinutes = (int) (diff / (60 * 1000));
+         return (lateMinutes > GRACE_PERIOD_MINUTES) ? lateMinutes : 0;
+     }
+ 
+     private static int calculateOvertimeMinutes(String logout) throws ParseException {
+         Date logoutTime = TIME_FORMAT.parse(logout);
+         Date expectedEnd = TIME_FORMAT.parse(WORK_END);
+         int overtimeMinutes = (int) ((logoutTime.getTime() - expectedEnd.getTime()) / 60000);
+         return Math.max(overtimeMinutes, 0);
+     }
+ 
+     private static int calculateWorkedMinutes(String login, String logout) throws ParseException {
+         Date loginTime = TIME_FORMAT.parse(login);
+         Date logoutTime = TIME_FORMAT.parse(logout);
+         Date expectedEnd = TIME_FORMAT.parse(WORK_END);
+ 
+         int workedMinutes = (int) ((logoutTime.getTime() - loginTime.getTime()) / 60000) - BREAK_HOUR;
+ 
+         if (logoutTime.after(expectedEnd)) {
+             long diff = logoutTime.getTime() - expectedEnd.getTime();
+             int overtimeMinutes = (int) (diff / 60000);
+             workedMinutes -= overtimeMinutes;
+         }
+         return Math.max(workedMinutes, 0);
+     }
+ 
+     private static String formatMinutesToHoursAndMinutes(int minutes) {
+         int hours = minutes / 60;
+         int mins = minutes % 60;
+         return String.format("%dh %02dm", hours, mins);
+     }
+ 
+     private static String getEmployeeDetailLabel(int index) {
+         String[] labels = {"Employee #", "Name", "Birthday", "Address", "Phone Number", "SSS #",
+                 "Philhealth #", "TIN #", "Pag-ibig #", "Status", "Position", "Immediate Supervisor",
+                 "Basic Salary", "Rice Subsidy", "Phone Allowance", "Clothing Allowance", "Gross Semi-monthly Rate",
+                 "Hourly Rate"};
+         return (index < labels.length) ? labels[index] : "Unknown";
+     }
+ 
+     private static void calculateDeduction(String inputID, String inputName, String inputMonth) throws ParseException {
+         double hourlyRate = getHourlyRate(inputID, inputName);
+         if (hourlyRate <= 0) {
+             return;
+         }
+ 
+         double totalRegularEarnings = 0;
+         double totalOvertimeEarnings = 0;
+         double totalLateDeductions = 0;
+         double basicPay = 0;
+         int standardStartHour = Integer.parseInt(WORK_START.split(":")[0]);
+         int standardStartMinute = Integer.parseInt(WORK_START.split(":")[1]);
+         int standardEndHour = Integer.parseInt(WORK_END.split(":")[0]);
+         int standardEndMinute = Integer.parseInt(WORK_END.split(":")[1]);
+         int breakDurationMinutes = 60;
+         boolean attendanceRecordFound = false;
+         double riceSubsidy = 0;
+         double phoneAllowance = 0;
+         double clothingAllowance = 0;
+         boolean employeeDetailsFound = false;
+ 
+         for (String[] empDetails : EMPLOYEES) {
+             if (empDetails[0].trim().equals(inputID) && empDetails[1].trim().equalsIgnoreCase(inputName)) {
+                 try {
+                     riceSubsidy = Double.parseDouble(empDetails[13].trim());
+                     phoneAllowance = Double.parseDouble(empDetails[14].trim());
+                     clothingAllowance = Double.parseDouble(empDetails[15].trim());
+                     basicPay = Double.parseDouble(empDetails[12].trim());
+                     employeeDetailsFound = true;
+                 } catch (NumberFormatException e) {
+                     System.out.println("Error: No Records found for: " + inputName);
+                     System.out.println("=============================");
+                     riceSubsidy = 0;
+                     phoneAllowance = 0;
+                     clothingAllowance = 0;
+                     basicPay = 0;
+                 }
+                 break;
+             }
+         }
+ 
+         for (String[] details : ATTENDANCE) {
+             if (details[0].trim().equals(inputID) && details[1].trim().equalsIgnoreCase(inputName)) {
+                 String date = details[2].trim();
+                 String loginTime = details[3].trim();
+                 String logoutTime = details[4].trim();
+                 String recordMonth = MONTH_FORMAT.format(INPUT_DATE_FORMAT.parse(date));
+ 
+                 if (inputMonth.equalsIgnoreCase("all") || inputMonth.equalsIgnoreCase(recordMonth)) {
+                     attendanceRecordFound = true;
+                     Date login = TIME_FORMAT.parse(loginTime);
+                     Date logout = TIME_FORMAT.parse(logoutTime);
+ 
+                     int logInHour = Integer.parseInt(loginTime.split(":")[0]);
+                     int logInMinute = Integer.parseInt(loginTime.split(":")[1]);
+                     int logOutHour = Integer.parseInt(logoutTime.split(":")[0]);
+                     int logOutMinute = Integer.parseInt(logoutTime.split(":")[1]);
+ 
+                     int lateDuration = (logInHour - standardStartHour) * 60 + (logInMinute - standardStartMinute);
+ 
+                     if (lateDuration <= GRACE_PERIOD_MINUTES) {
+                         lateDuration = 0;
+                     } else if (lateDuration < 0) {
+                         lateDuration = 0;
+                     }
+ 
+                     int totalWorkedMinutes = (logOutHour - logInHour) * 60 + (logOutMinute - logInMinute);
+ 
+                     int effectiveWorkMinutes = totalWorkedMinutes - breakDurationMinutes;
+ 
+                     int adjustedWorkMinutes = effectiveWorkMinutes - lateDuration;
+                     if (adjustedWorkMinutes < 0) {
+                         adjustedWorkMinutes = 0;
+                     }
+ 
+                     int overtimeDuration = (logOutHour - standardEndHour) * 60 + (logOutMinute - standardEndMinute);
+                     if (overtimeDuration < 0) {
+                         overtimeDuration = 0;
+                     }
+ 
+                     double regularEarnings = (adjustedWorkMinutes / 60.0) * hourlyRate;
+                     double overtimeEarnings = (overtimeDuration / 60.0) * hourlyRate;
+                     double lateDeduction = (lateDuration / 60.0) * hourlyRate;
+ 
+                     totalRegularEarnings += regularEarnings;
+                     totalOvertimeEarnings += overtimeEarnings;
+                     totalLateDeductions += lateDeduction;
+                 }
+             }
+         }
+ 
+         if (attendanceRecordFound) {
+             System.out.println("-----------------------------");
+             System.out.println("Earnings:");
+             System.out.printf(" Total Regular Earnings for the Month: PHP %.2f%n", totalRegularEarnings);
+             System.out.printf(" Total Overtime Earnings for the Month: PHP %.2f%n", totalOvertimeEarnings);
+             double totalEarnings = totalRegularEarnings + totalOvertimeEarnings;
+             System.out.printf("Combined Total Earnings (Regular + Overtime): PHP %.2f%n", totalEarnings);
+ 
+             System.out.println("-----------------------------");
+ 
+             double sssDeduction = 0;
+             double philhealthDeduction = 0;
+             double pagibigDeduction = 0;
+             double employeeShare = 0;
+             double employerShare = 0;
+             double withholdingTax = 0;
+             double totalAllowances = 0;
+             double netSalary = 0;
+             double totalDeductions = 0;
+             double taxableIncome = 0;
+ 
+               if (attendanceRecordFound) { //only calculate if record exists
+             if (basicPay < 3250.00) {
+                 sssDeduction = 135.00;
+             } else if (basicPay <= 3750.00) {
+                 sssDeduction = 157.50;
+             } else if (basicPay <= 4250.00) {
+                 sssDeduction = 180.00;
+             } else if (basicPay <= 4750.00) {
+                 sssDeduction = 202.50;
+             } else if (basicPay <= 5250.00) {
+                 sssDeduction = 225.00;
+             } else if (basicPay <= 5750.00) {
+                 sssDeduction = 247.50;
+             } else if (basicPay <= 6250.00) {
+                 sssDeduction = 270.00;
+             } else if (basicPay <= 6750.00) {
+                 sssDeduction = 292.50;
+             } else if (basicPay <= 7250.00) {
+                 sssDeduction = 315.00;
+             } else if (basicPay <= 7750.00) {
+                 sssDeduction = 337.50;
+             } else if (basicPay <= 8250.00) {
+                 sssDeduction = 360.00;
+             } else if (basicPay <= 8750.00) {
+                 sssDeduction = 382.50;
+             } else if (basicPay <= 9250.00) {
+                 sssDeduction = 405.00;
+             } else if (basicPay <= 9750.00) {
+                 sssDeduction = 427.50;
+             } else if (basicPay <= 10250.00) {
+                 sssDeduction = 450.00;
+             } else if (basicPay <= 10750.00) {
+                 sssDeduction = 472.50;
+             } else if (basicPay <= 11250.00) {
+                 sssDeduction = 495.00;
+             } else if (basicPay <= 11750.00) {
+                 sssDeduction = 517.50;
+             } else if (basicPay <= 12250.00) {
+                 sssDeduction = 540.00;
+             } else if (basicPay <= 12750.00) {
+                 sssDeduction = 562.50;
+             } else if (basicPay <= 13250.00) {
+                 sssDeduction = 585.00;
+             } else if (basicPay <= 13750.00) {
+                 sssDeduction = 607.50;
+             } else if (basicPay <= 14250.00) {
+                 sssDeduction = 630.00;
+             } else if (basicPay <= 14750.00) {
+                 sssDeduction = 652.50;
+             } else if (basicPay <= 15250.00) {
+                 sssDeduction = 675.00;
+             } else if (basicPay <= 15750.00) {
+                 sssDeduction = 697.50;
+             } else if (basicPay <= 16250.00) {
+                 sssDeduction = 720.00;
+             } else if (basicPay <= 16750.00) {
+                 sssDeduction = 742.50;
+             } else if (basicPay <= 17250.00) {
+                 sssDeduction = 765.00;
+             } else if (basicPay <= 17750.00) {
+                 sssDeduction = 787.50;
+             } else if (basicPay <= 18250.00) {
+                 sssDeduction = 810.00;
+             } else if (basicPay <= 18750.00) {
+                 sssDeduction = 832.50;
+             } else if (basicPay <= 19250.00) {
+                 sssDeduction = 855.00;
+             } else if (basicPay <= 19750.00) {
+                 sssDeduction = 877.50;
+             } else if (basicPay <= 20250.00) {
+                 sssDeduction = 900.00;
+             } else if (basicPay <= 20750.00) {
+                 sssDeduction = 922.50;
+             } else if (basicPay <= 21250.00) {
+                 sssDeduction = 945.00;
+             } else if (basicPay <= 21750.00) {
+                 sssDeduction = 967.50;
+             } else if (basicPay <= 22250.00) {
+                 sssDeduction = 990.00;
+             } else if (basicPay <= 22750.00) {
+                 sssDeduction = 1012.50;
+             } else if (basicPay <= 23250.00) {
+                 sssDeduction = 1035.00;
+             } else if (basicPay <= 23750.00) {
+                 sssDeduction = 1057.50;
+             } else if (basicPay <= 24250.00) {
+                 sssDeduction = 1080.00;
+             } else if (basicPay <= 24750.00) {
+                 sssDeduction = 1102.50;
+             } else {
+                 sssDeduction = 1125.00; // For salaries over 24,750
+             }
+ 
+                if (basicPay <= 10000) {
+                 philhealthDeduction = basicPay * 0.03; // 3%
+                 if (philhealthDeduction > 300) {
+                     philhealthDeduction = 300;
+                 }
+             } else if (totalRegularEarnings <= 59999.99) {
+                 philhealthDeduction = basicPay * 0.03; // 3%
+                 if (philhealthDeduction < 300) {
+                     philhealthDeduction = 300;
+                 } else if (philhealthDeduction > 1800) {
+                     philhealthDeduction = 1800;
+                 }
+             } else {
+                 philhealthDeduction = 1800; // Cap at 60,000 or above
+             }
+ 
+             employeeShare = philhealthDeduction / 2;
+             employerShare = philhealthDeduction / 2;
+ 
+              if (totalRegularEarnings >= 1000 && totalRegularEarnings <= 1500) {
+                 basicPay = 0.01; // 1% for earnings between 1,000 and 1,500
+             } else if (totalRegularEarnings > 1500) {
+                 basicPay = 0.02; // 2% for earnings above 1,500
+             } else {
+                 basicPay = 0.0; // No deduction for salaries below 1,000
+             }
+ 
+ 
+                 
+ // Compute the employee's Pag-IBIG deduction
+             double employeeContribution = totalRegularEarnings * basicPay;
+ 
+             // Apply the maximum cap of PHP 100
+             if (employeeContribution > 100) {
+                 employeeContribution = 100;
+             }
+             pagibigDeduction = employeeContribution;
+ 
+             // Compute allowances
+             if (employeeDetailsFound) {
+                 totalAllowances = riceSubsidy + phoneAllowance + clothingAllowance;
+             } else {
+                     totalAllowances = 0; // 
+                 }
+ 
+                 totalAllowances = riceSubsidy + phoneAllowance + clothingAllowance;
+                 taxableIncome = totalEarnings - sssDeduction - philhealthDeduction - pagibigDeduction;
+ 
+                 // Compute total earnings
+                 totalEarnings = totalRegularEarnings + totalOvertimeEarnings;
+ 
+                 // Compute taxable income
+                 totalDeductions = sssDeduction + philhealthDeduction + pagibigDeduction + totalLateDeductions;
+                 taxableIncome = totalEarnings - totalDeductions;
+ 
+                 // Compute withholding tax
+                 if (taxableIncome <= 20832) {
+                     withholdingTax = taxableIncome * 0.00;
+                 } else if (taxableIncome <= 33332) {
+                     withholdingTax = (taxableIncome - 20832) * 0.20;
+                 } else if (taxableIncome <= 66667) {
+                     withholdingTax = 2500 + (taxableIncome - 33332) * 0.25;
+                 } else if (taxableIncome <= 166667) {
+                     withholdingTax = 10833.33 + (taxableIncome - 66667) * 0.30;
+                 } else if (taxableIncome <= 666667) {
+                     withholdingTax = 40833.33 + (taxableIncome - 166667) * 0.32;
+                 } else {
+                     withholdingTax = 200833.33 + (taxableIncome - 666667) * 0.35;
+                 }
+ 
+                 // Compute net salary
+                 netSalary = totalEarnings + totalAllowances - totalDeductions - withholdingTax;
+ 
+ 
+                  System.out.println("Deductions:");
+                 System.out.printf(" SSS: PHP %.2f%n", sssDeduction);
+                 System.out.printf(" PhilHealth: PHP %.2f%n", philhealthDeduction);
+                 System.out.printf("     PhilHealth (Employee Share): PHP %.2f%n", employeeShare);
+                 System.out.printf("     PhilHealth (Employer Share): PHP %.2f%n", employerShare);
+                 System.out.printf(" Pag-IBIG: PHP %.2f%n", pagibigDeduction);
+                 System.out.printf(" Late Deductions for the Month: PHP %.2f%n", totalLateDeductions);
+                 System.out.printf("Total Deductions: PHP %.2f%n", totalDeductions);
+                 System.out.println("-----------------------------");
+ 
+                 System.out.println("Allowances:");
+                 System.out.printf(" Rice Subsidy: PHP %.2f%n", riceSubsidy);
+                 System.out.printf(" Phone Allowance: PHP %.2f%n", phoneAllowance);
+                 System.out.printf(" Clothing Allowance: PHP %.2f%n", clothingAllowance);
+                 System.out.println("-----------------------------");
+ 
+                 System.out.println("Summary:");
+                 System.out.printf(" Gross Salary: PHP %.2f%n", taxableIncome);
+                 System.out.printf(" Withholding Tax: PHP %.2f%n", withholdingTax);
+                 System.out.printf(" Total Allowances: PHP %.2f%n", totalAllowances);
+                 System.out.printf(" Net Salary: PHP %.2f%n", netSalary);
+                 System.out.println("=============================");
+             } else {
+                 System.out.println("No attendance records found for the employee in the specified month.");
+                 System.out.println("=============================");
+             }
+         } else if (employeeDetailsFound) {
+             System.out.println("No attendance records found for the employee.");
+             System.out.println("=============================");
+         }
+     }
+ 
+     private static double getHourlyRate(String inputID, String inputName) {
+         for (String[] employee : EMPLOYEES) {
+             if (employee[0].trim().equals(inputID) && employee[1].trim().equalsIgnoreCase(inputName)) {
+                 try {
+                     return Double.parseDouble(employee[17].trim());
+                 } catch (NumberFormatException e) {
+                     System.out.println("Error: Invalid hourly rate format for employee: " + inputName);
+                     return 0;
+                 }
+             }
+         }
+         System.out.println("Error: Employee not found: " + inputName);
+         return 0;
+     }
+ }
