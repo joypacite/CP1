@@ -1,0 +1,608 @@
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.Locale;
+import java.util.Scanner;
+/**
+ *
+ * @author Pacite,J.
+ */
+public class MotorPH8 {
+
+    private static final String EMPLOYEE_FILE = "employees.csv";
+    private static final String ATTENDANCE_FILE = "attendance.csv";
+    private static final SimpleDateFormat INPUT_DATE_FORMAT = new SimpleDateFormat("d-MMM-yy", Locale.ENGLISH);
+    private static final SimpleDateFormat MONTH_FORMAT = new SimpleDateFormat("MMM-yy", Locale.ENGLISH);
+    private static final SimpleDateFormat TIME_FORMAT = new SimpleDateFormat("HH:mm");
+    private static final String WORK_START = "08:00";
+    private static final String WORK_END = "17:00";
+    private static final int GRACE_PERIOD_MINUTES = 10;
+    private static final int BREAK_HOUR = 60;
+
+    public static void main(String[] args) {
+        Scanner scanner = new Scanner(System.in);
+
+        String inputID;
+        String inputName;
+        boolean employeeFound;
+        int attempts = 0;
+
+        
+        do {
+            System.out.print("Enter Employee ID: ");
+            inputID = scanner.nextLine().trim();
+
+            System.out.print("Enter Employee Name: ");
+            inputName = scanner.nextLine().trim();
+
+            employeeFound = searchEmployee(inputID, inputName);
+            if (!employeeFound) {
+                System.out.println("Error: Employee ID and Name do not match or do not exist. Please try again.");
+                System.out.println("-----------------------------");
+                attempts++;
+                if (attempts >= 3) {
+                    System.out.println("Error: Too many invalid attempts. Exiting program.");
+                    System.out.println("-----------------------------");
+                    scanner.close();
+                    return; // Exit the program
+                }
+            } else {
+                break; // Exit the loop if employee is found
+            }
+        } while (true); // Continue looping until employee is found
+
+        displayEmployeeDetails(inputID, inputName);
+
+        String inputMonth;
+        do {
+            System.out.print("Enter Month (MMM-yy) to view attendance or 'exit' to quit: ");
+            inputMonth = scanner.nextLine().trim();
+
+            if (inputMonth.equalsIgnoreCase("exit")) {
+                break; // Exit the loop if user enters "exit"
+            }
+
+            try {
+                displayAttendance(inputID, inputName, inputMonth);
+                calculateDeduction(inputID, inputName, inputMonth);
+            } catch (ParseException e) {
+                System.out.println("Error: A parsing error occurred: " + e.getMessage());
+                
+            }
+        } while (true); // Keep looping until the user enters "exit"
+
+        scanner.close(); // Close the scanner when we are done with it.
+    }
+
+    private static boolean searchEmployee(String inputID, String inputName) {
+        return findEmployee(inputID, inputName, false);
+    }
+
+    private static void displayEmployeeDetails(String inputID, String inputName) {
+        findEmployee(inputID, inputName, true);
+    }
+
+    private static boolean findEmployee(String inputID, String inputName, boolean displayDetails) {
+        ClassLoader classLoader = MotorPH8.class.getClassLoader();
+        InputStream inputStream = classLoader.getResourceAsStream(EMPLOYEE_FILE);
+
+        if (inputStream == null) {
+            System.out.println("Error: " + EMPLOYEE_FILE + " not found in resources.");
+            return false;
+        }
+
+        try (BufferedReader br = new BufferedReader(new InputStreamReader(inputStream, StandardCharsets.UTF_8))) {
+            String line;
+            while ((line = br.readLine()) != null) {
+                String[] details = line.split(",");
+
+                if (details.length >= 18 && details[0].trim().equals(inputID) && details[1].trim().equalsIgnoreCase(inputName)) {
+                    if (displayDetails) {
+                        System.out.println("-----------------------------");
+                        System.out.println("Employee Details:");
+                        for (int i = 0; i < details.length; i++) {
+                            System.out.printf("%s: %s%n", getEmployeeDetailLabel(i), details[i].trim());
+                        }
+                        System.out.println("-----------------------------");
+                    }
+                    return true;
+                }
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return false;
+    }
+
+    private static void displayAttendance(String inputID, String inputName, String inputMonth) throws ParseException {
+        ClassLoader classLoader = MotorPH8.class.getClassLoader();
+        InputStream inputStream = classLoader.getResourceAsStream(ATTENDANCE_FILE);
+
+        if (inputStream == null) {
+            System.out.println("Error: " + ATTENDANCE_FILE + " not found in resources.");
+            return;
+        }
+
+        System.out.println("Attendance Records for the Employee:");
+        System.out.println("----------------------------------------------------------------------------");
+        System.out.printf("%-12s %-10s %-10s %-10s %-10s %-15s%n", "Date", "Login", "Logout", "Late", "OT", "Worked Time");
+        System.out.println("----------------------------------------------------------------------------");
+
+        boolean recordFound = false; // Flag to check if any record is found
+        try (BufferedReader br = new BufferedReader(new InputStreamReader(inputStream, StandardCharsets.UTF_8))) {
+            String line;
+            while ((line = br.readLine()) != null) {
+                String[] details = line.split(",");
+
+                if (details.length >= 5 && details[0].trim().equals(inputID) && details[1].trim().equalsIgnoreCase(inputName)) {
+                    String date = details[2].trim();
+                    String login = details[3].trim();
+                    String logout = details[4].trim();
+
+                    String recordMonth = MONTH_FORMAT.format(INPUT_DATE_FORMAT.parse(date));
+                    if (inputMonth.equalsIgnoreCase("all") || inputMonth.equalsIgnoreCase(recordMonth)) {
+                        int lateMinutes = calculateLateMinutes(login);
+                        int overtimeMinutes = calculateOvertimeMinutes(logout);
+                        int workedMinutes = calculateWorkedMinutes(login, logout);
+
+                        System.out.printf("%-12s %-10s %-10s %-10s %-10s %-15s%n", date, login, logout,
+                                formatMinutesToHoursAndMinutes(lateMinutes),
+                                formatMinutesToHoursAndMinutes(overtimeMinutes),
+                                formatMinutesToHoursAndMinutes(workedMinutes));
+                        recordFound = true; // true if record is found
+                    }
+                }
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        if (!recordFound && !inputMonth.equalsIgnoreCase("all")) {
+            System.out.println("No attendance records found for the specified month.");
+            System.out.println("=============================");
+        }
+    }
+
+    private static int calculateLateMinutes(String login) throws ParseException {
+        Date loginTime = TIME_FORMAT.parse(login);
+        Date expectedStart = TIME_FORMAT.parse(WORK_START);
+        int lateMinutes = (int) ((loginTime.getTime() - expectedStart.getTime()) / 60000);
+        return (lateMinutes > GRACE_PERIOD_MINUTES) ? lateMinutes : 0;
+    }
+
+    private static int calculateOvertimeMinutes(String logout) throws ParseException {
+        Date logoutTime = TIME_FORMAT.parse(logout);
+        Date expectedEnd = TIME_FORMAT.parse(WORK_END);
+        int overtimeMinutes = (int) ((logoutTime.getTime() - expectedEnd.getTime()) / 60000);
+        return Math.max(overtimeMinutes, 0);
+    }
+
+    private static int calculateWorkedMinutes(String login, String logout) throws ParseException {
+        Date loginTime = TIME_FORMAT.parse(login);
+        Date logoutTime = TIME_FORMAT.parse(logout);
+        Date expectedEnd = TIME_FORMAT.parse(WORK_END); // Use WORK_END for standard work end time
+
+        int workedMinutes = (int) ((logoutTime.getTime() - loginTime.getTime()) / 60000) - BREAK_HOUR;
+
+        // Ensure workedMinutes does not include overtime
+        if (logoutTime.after(expectedEnd)) {
+            long diff = logoutTime.getTime() - expectedEnd.getTime();
+            int overtimeMinutes = (int) (diff / 60000);
+            workedMinutes -= overtimeMinutes;
+        }
+        return Math.max(workedMinutes, 0);
+    }
+
+    private static String formatMinutesToHoursAndMinutes(int minutes) {
+        int hours = minutes / 60;
+        int mins = minutes % 60;
+        return String.format("%dh %02dm", hours, mins);
+    }
+
+    private static String getEmployeeDetailLabel(int index) {
+        String[] labels = {"Employee #", "Name", "Birthday", "Address", "Phone Number", "SSS #",
+                "Philhealth #", "TIN #", "Pag-ibig #", "Status", "Position", "Immediate Supervisor",
+                "Basic Salary", "Rice Subsidy", "Phone Allowance", "Clothing Allowance", "Gross Semi-monthly Rate",
+                "Hourly Rate"};
+        return (index < labels.length) ? labels[index] : "Unknown";
+    }
+
+    private static void calculateDeduction(String inputID, String inputName, String inputMonth) throws ParseException {
+        double hourlyRate = getHourlyRate(inputID, inputName);
+        if (hourlyRate <= 0) {
+            return;
+        }
+
+        ClassLoader classLoader = MotorPH8.class.getClassLoader();
+        InputStream employeeStream = classLoader.getResourceAsStream(EMPLOYEE_FILE);
+
+        if (employeeStream == null) {
+            System.out.println("Error: " + EMPLOYEE_FILE + " not found in resources.");
+            return;
+        }
+
+        double totalRegularEarnings = 0;
+        double totalOvertimeEarnings = 0;
+        double totalLateDeductions = 0;
+        double basicPay = 0; //added
+        int standardStartHour = Integer.parseInt(WORK_START.split(":")[0]);
+        int standardStartMinute = Integer.parseInt(WORK_START.split(":")[1]);
+        int standardEndHour = Integer.parseInt(WORK_END.split(":")[0]);
+        int standardEndMinute = Integer.parseInt(WORK_END.split(":")[1]);
+        int breakDurationMinutes = 60;
+        boolean attendanceRecordFound = false; //flag
+        double riceSubsidy = 0;
+        double phoneAllowance = 0;
+        double clothingAllowance = 0;
+        boolean employeeDetailsFound = false; // Flag to track if employee details were found
+
+        try (BufferedReader br = new BufferedReader(new InputStreamReader(employeeStream, StandardCharsets.UTF_8))) {
+            String line;
+            while ((line = br.readLine()) != null) {
+                String[] empDetails = line.split(",");
+                if (empDetails.length >= 18 && empDetails[0].trim().equals(inputID) && empDetails[1].trim().equalsIgnoreCase(inputName)) {
+                    try {
+                        riceSubsidy = Double.parseDouble(empDetails[13].trim());
+                        phoneAllowance = Double.parseDouble(empDetails[14].trim());
+                        clothingAllowance = Double.parseDouble(empDetails[15].trim());
+                        basicPay = Double.parseDouble(empDetails[12].trim());
+                        employeeDetailsFound = true; // true if match
+                    } catch (NumberFormatException e) {
+                        System.out.println("Error: No Records found for: " + inputName);
+                        System.out.println("=============================");
+                        riceSubsidy = 0;
+                        phoneAllowance = 0;
+                        clothingAllowance = 0;
+                        basicPay = 0;
+                    }
+                    break; // Exit the loop after finding the employee
+                }
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        InputStream attendanceStream = classLoader.getResourceAsStream(ATTENDANCE_FILE);
+        if (attendanceStream == null) {
+            System.out.println("Error: " + ATTENDANCE_FILE + " not found in resources.");
+            return;
+        }
+
+        try (BufferedReader br = new BufferedReader(new InputStreamReader(attendanceStream, StandardCharsets.UTF_8))) {
+            String line;
+            while ((line = br.readLine()) != null) {
+                String[] details = line.split(",");
+
+                if (details.length >= 5 && details[0].trim().equals(inputID) && details[1].trim().equalsIgnoreCase(inputName)) {
+                    String date = details[2].trim();
+                    String loginTime = details[3].trim();
+                    String logoutTime = details[4].trim();
+                    String recordMonth = MONTH_FORMAT.format(INPUT_DATE_FORMAT.parse(date));
+
+                    if (inputMonth.equalsIgnoreCase("all") || inputMonth.equalsIgnoreCase(recordMonth)) {
+                        attendanceRecordFound = true; //set to true
+                        Date login = TIME_FORMAT.parse(loginTime);
+                        Date logout = TIME_FORMAT.parse(logoutTime);
+
+                        int logInHour = Integer.parseInt(loginTime.split(":")[0]);
+                        int logInMinute = Integer.parseInt(loginTime.split(":")[1]);
+                        int logOutHour = Integer.parseInt(logoutTime.split(":")[0]);
+                        int logOutMinute = Integer.parseInt(logoutTime.split(":")[1]);
+
+                        int lateDuration = (logInHour - standardStartHour) * 60 + (logInMinute - standardStartMinute);
+
+                        // Apply grace period
+                        if (lateDuration <= GRACE_PERIOD_MINUTES) {
+                            lateDuration = 0; // No late duration if within the grace period
+                        } else if (lateDuration < 0) {
+                            lateDuration = 0; // No negative values for late duration
+                        }
+
+                        // Calculate total worked time in minutes (from log in to log out)
+                        int totalWorkedMinutes = (logOutHour - logInHour) * 60 + (logOutMinute - logInMinute);
+
+                        // Calculate effective total work time after subtracting the break
+                        int effectiveWorkMinutes = totalWorkedMinutes - breakDurationMinutes;
+
+                        // Deduct late duration from effective work time
+                        int adjustedWorkMinutes = effectiveWorkMinutes - lateDuration;
+                        if (adjustedWorkMinutes < 0) {
+                            adjustedWorkMinutes = 0; // Ensure no negative adjusted work time
+                        }
+
+                        // Calculate overtime duration in minutes
+                        int overtimeDuration = (logOutHour - standardEndHour) * 60 + (logOutMinute - standardEndMinute);
+                        if (overtimeDuration < 0) {
+                            overtimeDuration = 0; // No negative values for overtime
+                        }
+
+                        // Calculate earnings
+                        double regularEarnings = (adjustedWorkMinutes / 60.0) * hourlyRate;
+                        double overtimeEarnings = (overtimeDuration / 60.0) * hourlyRate;
+                        double lateDeduction = (lateDuration / 60.0) * hourlyRate;
+
+                        // Accumulate earnings
+                        totalRegularEarnings += regularEarnings;
+                        totalOvertimeEarnings += overtimeEarnings;
+                        totalLateDeductions += lateDeduction;
+
+                        // Convert times to hours and minutes for printing
+                        int adjustedWorkHours = adjustedWorkMinutes / 60;
+                        int adjustedWorkRemMinutes = adjustedWorkMinutes % 60;
+                        int overtimeHours = overtimeDuration / 60;
+                        int overtimeRemMinutes = overtimeDuration % 60;
+
+                        // Late duration in hours and minutes
+                        int lateHours = lateDuration / 60;
+                        int lateMinutes = lateDuration % 60;
+
+
+                        // Output details for the day - Removed printing here, will do monthly summary
+                        // System.out.printf(" Log In: %02d:%02d%n", logInHour, logInMinute);
+                        // System.out.printf(" Log Out: %02d:%02d%n", logOutHour, logOutMinute);
+                        // System.out.printf(" Late Duration: %d hours and %d minutes%n", lateHours, lateMinutes);
+                        // System.out.printf(" Total Worked Time (adjusted): %d hours and %d minutes%n", adjustedWorkHours, adjustedWorkRemMinutes);
+                        // System.out.printf(" Overtime Duration: %d hours and %d minutes%n", overtimeHours, overtimeRemMinutes);
+                        // System.out.println("-----------------------------");
+                    }
+                }
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        // Display monthly totals
+    
+        if (attendanceRecordFound) { // Only display totals if records were found
+            System.out.println("-----------------------------");
+            System.out.println("Earnings:");
+            System.out.printf(" Total Regular Earnings for the Month: PHP %.2f%n", totalRegularEarnings);
+            System.out.printf(" Total Overtime Earnings for the Month: PHP %.2f%n", totalOvertimeEarnings);
+            double totalEarnings = totalRegularEarnings + totalOvertimeEarnings;
+            System.out.printf("Combined Total Earnings (Regular + Overtime): PHP %.2f%n", totalEarnings);
+            
+            System.out.println("-----------------------------");
+
+        // Government deductions
+        double sssDeduction = 0;
+        double philhealthDeduction = 0;
+        double pagibigDeduction = 0;
+        double employeeShare = 0;
+        double employerShare = 0;
+        double withholdingTax = 0;
+        double totalAllowances = 0;
+        double netSalary = 0;
+        double totalDeductions = 0;
+        double taxableIncome = 0;
+
+
+        // Fetch basic pay
+        //basicPay = getBasicPay(inputID, inputName); //already fetched above
+        if (attendanceRecordFound) { //only calculate if record exists
+            if (basicPay < 3250.00) {
+                sssDeduction = 135.00;
+            } else if (basicPay <= 3750.00) {
+                sssDeduction = 157.50;
+            } else if (basicPay <= 4250.00) {
+                sssDeduction = 180.00;
+            } else if (basicPay <= 4750.00) {
+                sssDeduction = 202.50;
+            } else if (basicPay <= 5250.00) {
+                sssDeduction = 225.00;
+            } else if (basicPay <= 5750.00) {
+                sssDeduction = 247.50;
+            } else if (basicPay <= 6250.00) {
+                sssDeduction = 270.00;
+            } else if (basicPay <= 6750.00) {
+                sssDeduction = 292.50;
+            } else if (basicPay <= 7250.00) {
+                sssDeduction = 315.00;
+            } else if (basicPay <= 7750.00) {
+                sssDeduction = 337.50;
+            } else if (basicPay <= 8250.00) {
+                sssDeduction = 360.00;
+            } else if (basicPay <= 8750.00) {
+                sssDeduction = 382.50;
+            } else if (basicPay <= 9250.00) {
+                sssDeduction = 405.00;
+            } else if (basicPay <= 9750.00) {
+                sssDeduction = 427.50;
+            } else if (basicPay <= 10250.00) {
+                sssDeduction = 450.00;
+            } else if (basicPay <= 10750.00) {
+                sssDeduction = 472.50;
+            } else if (basicPay <= 11250.00) {
+                sssDeduction = 495.00;
+            } else if (basicPay <= 11750.00) {
+                sssDeduction = 517.50;
+            } else if (basicPay <= 12250.00) {
+                sssDeduction = 540.00;
+            } else if (basicPay <= 12750.00) {
+                sssDeduction = 562.50;
+            } else if (basicPay <= 13250.00) {
+                sssDeduction = 585.00;
+            } else if (basicPay <= 13750.00) {
+                sssDeduction = 607.50;
+            } else if (basicPay <= 14250.00) {
+                sssDeduction = 630.00;
+            } else if (basicPay <= 14750.00) {
+                sssDeduction = 652.50;
+            } else if (basicPay <= 15250.00) {
+                sssDeduction = 675.00;
+            } else if (basicPay <= 15750.00) {
+                sssDeduction = 697.50;
+            } else if (basicPay <= 16250.00) {
+                sssDeduction = 720.00;
+            } else if (basicPay <= 16750.00) {
+                sssDeduction = 742.50;
+            } else if (basicPay <= 17250.00) {
+                sssDeduction = 765.00;
+            } else if (basicPay <= 17750.00) {
+                sssDeduction = 787.50;
+            } else if (basicPay <= 18250.00) {
+                sssDeduction = 810.00;
+            } else if (basicPay <= 18750.00) {
+                sssDeduction = 832.50;
+            } else if (basicPay <= 19250.00) {
+                sssDeduction = 855.00;
+            } else if (basicPay <= 19750.00) {
+                sssDeduction = 877.50;
+            } else if (basicPay <= 20250.00) {
+                sssDeduction = 900.00;
+            } else if (basicPay <= 20750.00) {
+                sssDeduction = 922.50;
+            } else if (basicPay <= 21250.00) {
+                sssDeduction = 945.00;
+            } else if (basicPay <= 21750.00) {
+                sssDeduction = 967.50;
+            } else if (basicPay <= 22250.00) {
+                sssDeduction = 990.00;
+            } else if (basicPay <= 22750.00) {
+                sssDeduction = 1012.50;
+            } else if (basicPay <= 23250.00) {
+                sssDeduction = 1035.00;
+            } else if (basicPay <= 23750.00) {
+                sssDeduction = 1057.50;
+            } else if (basicPay <= 24250.00) {
+                sssDeduction = 1080.00;
+            } else if (basicPay <= 24750.00) {
+                sssDeduction = 1102.50;
+            } else {
+                sssDeduction = 1125.00; // For salaries over 24,750
+            }
+
+
+            if (basicPay <= 10000) {
+                philhealthDeduction = basicPay * 0.03; // 3%
+                if (philhealthDeduction > 300) {
+                    philhealthDeduction = 300;
+                }
+            } else if (totalRegularEarnings <= 59999.99) {
+                philhealthDeduction = basicPay * 0.03; // 3%
+                if (philhealthDeduction < 300) {
+                    philhealthDeduction = 300;
+                } else if (philhealthDeduction > 1800) {
+                    philhealthDeduction = 1800;
+                }
+            } else {
+                philhealthDeduction = 1800; // Cap at 60,000 or above
+            }
+
+            employeeShare = philhealthDeduction / 2;
+            employerShare = philhealthDeduction / 2;
+
+
+
+            if (totalRegularEarnings >= 1000 && totalRegularEarnings <= 1500) {
+                basicPay = 0.01; // 1% for earnings between 1,000 and 1,500
+            } else if (totalRegularEarnings > 1500) {
+                basicPay = 0.02; // 2% for earnings above 1,500
+            } else {
+                basicPay = 0.0; // No deduction for salaries below 1,000
+            }
+
+            // Compute the employee's Pag-IBIG deduction
+            double employeeContribution = totalRegularEarnings * basicPay;
+
+            // Apply the maximum cap of PHP 100
+            if (employeeContribution > 100) {
+                employeeContribution = 100;
+            }
+            pagibigDeduction = employeeContribution;
+
+            // Compute allowances
+            if (employeeDetailsFound) {
+                totalAllowances = riceSubsidy + phoneAllowance + clothingAllowance;
+            } else {
+                    totalAllowances = 0; // 
+                }
+
+                // Compute total earnings
+                totalEarnings = totalRegularEarnings + totalOvertimeEarnings;
+
+                // Compute taxable income
+                totalDeductions = sssDeduction + philhealthDeduction + pagibigDeduction + totalLateDeductions;
+                taxableIncome = totalEarnings - totalDeductions;
+
+                // Compute withholding tax
+                if (taxableIncome <= 20832) {
+                    withholdingTax = taxableIncome * 0.00;
+                } else if (taxableIncome <= 33332) {
+                    withholdingTax = (taxableIncome - 20832) * 0.20;
+                } else if (taxableIncome <= 66667) {
+                    withholdingTax = 2500 + (taxableIncome - 33332) * 0.25;
+                } else if (taxableIncome <= 166667) {
+                    withholdingTax = 10833.33 + (taxableIncome - 66667) * 0.30;
+                } else if (taxableIncome <= 666667) {
+                    withholdingTax = 40833.33 + (taxableIncome - 166667) * 0.32;
+                } else {
+                    withholdingTax = 200833.33 + (taxableIncome - 666667) * 0.35;
+                }
+
+                // Compute net salary
+                netSalary = totalEarnings + totalAllowances - totalDeductions - withholdingTax;
+
+                //display deductions
+                System.out.println("Deductions:");
+                System.out.printf(" SSS: PHP %.2f%n", sssDeduction);
+                System.out.printf(" PhilHealth: PHP %.2f%n", philhealthDeduction);
+                System.out.printf("     PhilHealth (Employee Share): PHP %.2f%n", employeeShare);
+                System.out.printf("     PhilHealth (Employer Share): PHP %.2f%n", employerShare);
+                System.out.printf(" Pag-IBIG: PHP %.2f%n", pagibigDeduction);
+                System.out.printf(" Late Deductions for the Month: PHP %.2f%n", totalLateDeductions);
+                System.out.printf("Total Deductions: PHP %.2f%n", totalDeductions);
+                System.out.println("-----------------------------");
+
+                //display allowances
+                System.out.println("Allowances:");
+                System.out.printf(" Rice Subsidy: PHP %.2f%n", riceSubsidy);
+                System.out.printf(" Phone Allowance: PHP %.2f%n", phoneAllowance);
+                System.out.printf(" Clothing Allowance: PHP %.2f%n", clothingAllowance);
+                System.out.println("-----------------------------");
+                System.out.println("Summary:");
+                System.out.printf(" Gross Salary: PHP %.2f%n", taxableIncome);
+                System.out.printf(" Withholding Tax: PHP %.2f%n", withholdingTax);
+                System.out.printf(" Total Allowances: PHP %.2f%n", totalAllowances);
+                System.out.printf(" Net Salary: PHP %.2f%n", netSalary);
+                System.out.println("=============================");
+            } else {
+                System.out.println("No attendance records found for this employee and month.  Deductions and Net Salary not calculated.");
+            }
+        }
+    }
+
+    private static double getHourlyRate(String employeeId, String employeeName) {
+        ClassLoader classLoader = MotorPH8.class.getClassLoader();
+        InputStream inputStream = classLoader.getResourceAsStream(EMPLOYEE_FILE);
+
+        if (inputStream == null) {
+            System.out.println("❌ Error: " + EMPLOYEE_FILE + " not found in resources.");
+            return 0;
+        }
+
+        try (BufferedReader br = new BufferedReader(new InputStreamReader(inputStream, StandardCharsets.UTF_8))) {
+            String line;
+            while ((line = br.readLine()) != null) {
+                String[] details = line.split(",");
+                if (details.length >= 18 && details[0].trim().equals(employeeId) && details[1].trim().equalsIgnoreCase(employeeName)) {
+                    try {
+                        return Double.parseDouble(details[17].trim());
+                    } catch (NumberFormatException e) {
+                        System.out.println(" Error: Invalid hourly rate format for employee ID: " + employeeId);
+                        return 0;
+                    }
+                }
+            }
+            System.out.println(" Error: Employee not found or hourly rate not available for ID: " + employeeId);
+            return 0;
+        } catch (IOException e) {
+            e.printStackTrace();
+            return 0;
+        }
+    }
+}
+
